@@ -311,6 +311,9 @@ function CreateProjectStaleFiles(project)
    if fileHasEntries then
       FileRename(tmpname, project.staleFile)
    end
+    -- on some systems tmpname will be created even if not opened or
+    -- written too, let's make sure we don't litter the filesystem
+   os.remove(tmpname)
 end
 ------------- Command Handling ------------
 gCommands = {}
@@ -384,12 +387,13 @@ function FileRename(old, new)
 	 while fin and fout do
 	    local block = fin:read(size)
 	    if not block then 
-	       fin:close()
-	       fout:close()
 	       break 
 	    end
 	    fout:write(block)
-	 end	 
+	 end
+	 fin:close()
+	 fout:close()
+	 os.remove(old)
       end
    end
 end
@@ -433,6 +437,11 @@ function build(projectName, options)
    end
    os.remove(project.staleFile)
    
+    -- on some systems tmpname will be created even if not opened or
+    -- written too, let's make sure we don't litter the filesystem
+   os.remove(tmpname)
+   os.remove(tmpfilenames)
+
    print("Done building")
 end
 
